@@ -4,27 +4,19 @@ defmodule Tower.Slack.Client do
   end
 
   defp post(url, payload) when is_map(payload) do
-    case :httpc.request(
-           :post,
-           {
-             ~c"#{url}",
-             [],
-             ~c"application/json",
-             Jason.encode!(payload)
-           },
-           [
-             ssl: tls_client_options()
-           ],
-           []
-         ) do
-      {:ok, result} ->
-        result
-        |> IO.inspect()
-
-      {:error, reason} ->
-        reason
-        |> IO.inspect()
-    end
+    :httpc.request(
+      :post,
+      {
+        ~c"#{url}",
+        [],
+        ~c"application/json",
+        Jason.encode!(payload)
+      },
+      [
+        ssl: tls_client_options()
+      ],
+      []
+    )
   end
 
   defp tls_client_options do
