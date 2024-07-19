@@ -14,14 +14,15 @@ defmodule TowerSlack.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :public_key]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:tower, github: "mimiquate/tower"}
+      {:tower, github: "mimiquate/tower"},
+      {:jason, "~> 1.4"}
     ]
   end
 end
