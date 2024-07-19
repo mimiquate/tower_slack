@@ -14,7 +14,7 @@ defmodule TowerSlack.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :public_key]
+      extra_applications: [:logger, :public_key, :inets]
     ]
   end
 
@@ -22,7 +22,10 @@ defmodule TowerSlack.MixProject do
   defp deps do
     [
       {:tower, github: "mimiquate/tower"},
-      {:jason, "~> 1.4"}
+      {:jason, "~> 1.4"},
+
+      # Test
+      {:bypass, "~> 2.1", only: :test}
     ]
   end
 end
