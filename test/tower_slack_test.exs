@@ -28,8 +28,30 @@ defmodule TowerSlackTest do
       {:ok, body, conn} = Plug.Conn.read_body(conn)
 
       assert(
-        %{"text" => "ArithmeticError: bad argument in arithmetic expression"} =
-          Jason.decode!(body)
+        %{
+          "blocks" => [
+            %{
+              "type" => "rich_text",
+              "elements" => [
+                %{
+                  "type" => "rich_text_section",
+                  "elements" => [
+                    %{
+                      "type" => "text",
+                      "text" =>
+                        "[tower_slack][test] ArithmeticError: bad argument in arithmetic expression"
+                    }
+                  ]
+                },
+                %{
+                  "type" => "rich_text_preformatted",
+                  "elements" => _,
+                  "border" => 0
+                }
+              ]
+            }
+          ]
+        } = Jason.decode!(body)
       )
 
       send(parent, {ref, :sent})
