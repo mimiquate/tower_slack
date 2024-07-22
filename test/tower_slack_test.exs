@@ -25,16 +25,14 @@ defmodule TowerSlackTest do
     ref = make_ref()
 
     Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
-      send(parent, {ref, :sent})
-
-      Plug.Conn.resp(conn, 200, "")
-
       {:ok, body, conn} = Plug.Conn.read_body(conn)
 
       assert(
         %{"text" => "ArithmeticError: bad argument in arithmetic expression"} =
           Jason.decode!(body)
       )
+
+      send(parent, {ref, :sent})
 
       conn
       |> Plug.Conn.put_resp_content_type("application/json")
