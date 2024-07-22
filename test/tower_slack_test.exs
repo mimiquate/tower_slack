@@ -43,7 +43,7 @@ defmodule TowerSlackTest do
       1 / 0
     end)
 
-    assert_receive {^ref, :sent}
+    assert_receive({^ref, :sent}, 500)
   end
 
   defp in_unlinked_process(fun) when is_function(fun, 0) do
