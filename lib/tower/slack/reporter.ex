@@ -25,7 +25,7 @@ defmodule Tower.Slack.Reporter do
     post_message("[#{level}] #{m}", "")
   end
 
-  defp post_message(kind, reason, stacktrace \\ nil) do
+  defp post_message(kind, reason, stacktrace \\ []) do
     {:ok, _} =
       Tower.Slack.Message.new(kind, reason, stacktrace)
       |> Tower.Slack.Client.deliver()
