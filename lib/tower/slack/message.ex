@@ -1,5 +1,5 @@
 defmodule Tower.Slack.Message do
-  def new(kind, reason, stacktrace \\ []) when is_list(stacktrace) do
+  def new(id, kind, reason, stacktrace \\ []) when is_list(stacktrace) do
     %{
       "blocks" => [
         %{
@@ -18,6 +18,15 @@ defmodule Tower.Slack.Message do
               type: "rich_text_preformatted",
               elements: stacktrace_to_pre_elements(stacktrace),
               border: 0
+            },
+            %{
+              type: "rich_text_section",
+              elements: [
+                %{
+                  type: "text",
+                  text: "id: #{id}"
+                }
+              ]
             }
           ]
         }

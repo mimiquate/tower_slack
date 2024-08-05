@@ -47,6 +47,15 @@ defmodule TowerSlackTest do
                   "type" => "rich_text_preformatted",
                   "elements" => _,
                   "border" => 0
+                },
+                %{
+                  "type" => "rich_text_section",
+                  "elements" => [
+                    %{
+                      "type" => "text",
+                      "text" => "id: " <> _rest
+                    }
+                  ]
                 }
               ]
             }
