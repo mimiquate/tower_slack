@@ -4,14 +4,15 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/tower_slack.svg)](https://hex.pm/packages/tower_slack)
 [![Docs](https://img.shields.io/badge/docs-gray.svg)](https://hexdocs.pm/tower_slack)
 
-A simple post-to-Slack reporter for [Tower](https://github.com/mimiquate/tower) error handler.
+A simple [post-to-Slack](https://api.slack.com/messaging/webhooks) reporter for [Tower](https://github.com/mimiquate/tower) error handler.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `tower_slack` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `tower_slack` to your list of dependencies in `mix.exs`:
 
 ```elixir
+# mix.exs
+
 def deps do
   [
     {:tower_slack, "~> 0.2.0"}
@@ -19,9 +20,48 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/tower_slack>.
+## Usage
+
+First, `Tower` error handler must be attached.
+
+```elixir
+# lib/<your_app>/application.ex
+
+defmodule YourApp.Application do
+  def start(_type, _args) do
+    Tower.attach()
+
+    # rest of your code
+  end
+```
+
+Then you register the reporter with Tower.
+
+```elixir
+# config/config.exs
+
+config(
+  :tower,
+  :reporters,
+  [
+    # along any other possible reporters
+    Tower.Slack.Reporter
+  ]
+)
+```
+
+And make any additional configurations specific to this reporter.
+
+```elixir
+# config/runtime.exs
+
+config :tower_slack,
+  otp_app: :your_app,
+  webhook_url: System.get_env("TOWER_SLACK_WEBHOOK_URL"),
+  environment: System.get_env("DEPLOYMENT_ENV", to_string(config_env()))
+```
+
+Instructions to create the Slack Webhook URL in https://api.slack.com/messaging/webhooks.
 
 ## License
 
