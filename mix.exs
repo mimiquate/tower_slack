@@ -3,7 +3,7 @@ defmodule TowerSlack.MixProject do
 
   @description "A simple post-to-Slack reporter for Tower error handler"
   @source_url "https://github.com/mimiquate/tower_slack"
-  @version "0.1.0"
+  @version "0.2.0"
 
   def project do
     [
