@@ -1,6 +1,6 @@
 # TowerSlack
 
-**TODO: Add description**
+A simple report-to-Slack reporter for [Tower](https://github.com/mimiquate/tower) error handler.
 
 ## Installation
 
