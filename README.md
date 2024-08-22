@@ -45,7 +45,7 @@ config(
   :reporters,
   [
     # along any other possible reporters
-    Tower.Slack.Reporter
+    TowerSlack.Reporter
   ]
 )
 ```

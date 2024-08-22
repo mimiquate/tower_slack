@@ -1,4 +1,4 @@
-defmodule Tower.Slack.Reporter do
+defmodule TowerSlack.Reporter do
   @behaviour Tower.Reporter
 
   @default_level :error
@@ -40,8 +40,8 @@ defmodule Tower.Slack.Reporter do
 
   defp post_message(id, kind, reason, stacktrace \\ []) do
     {:ok, _} =
-      Tower.Slack.Message.new(id, kind, reason, stacktrace)
-      |> Tower.Slack.Client.deliver()
+      TowerSlack.Message.new(id, kind, reason, stacktrace)
+      |> TowerSlack.Client.deliver()
 
     :ok
   end

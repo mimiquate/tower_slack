@@ -1,4 +1,4 @@
-defmodule Tower.Slack.Client do
+defmodule TowerSlack.Client do
   def deliver(message) do
     post(webhook_url(), message)
   end
