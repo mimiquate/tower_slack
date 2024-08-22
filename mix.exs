@@ -54,6 +54,7 @@ defmodule TowerSlack.MixProject do
 
   defp docs do
     [
+      main: "readme",
       extras: ["README.md"]
     ]
   end

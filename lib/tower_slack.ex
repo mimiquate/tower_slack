@@ -1,5 +1,5 @@
 defmodule TowerSlack do
   @moduledoc """
-  Documentation for `TowerSlack`.
+  Simple post-to-Slack reporter for [Tower](`e:tower:Tower`) error handler.
   """
 end

@@ -1,4 +1,6 @@
 defmodule TowerSlack.Message do
+  @moduledoc false
+
   def new(id, kind, reason, stacktrace \\ []) when is_list(stacktrace) do
     %{
       "blocks" => [
