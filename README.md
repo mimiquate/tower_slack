@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/mimiquate/tower_slack/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mimiquate/tower_slack/actions?query=branch%3Amain)
 [![Hex.pm](https://img.shields.io/hexpm/v/tower_slack.svg)](https://hex.pm/packages/tower_slack)
-[![Docs](https://img.shields.io/badge/docs-gray.svg)](https://hexdocs.pm/tower_slack)
+[![Documentation](https://img.shields.io/badge/Documentation-purple.svg)](https://hexdocs.pm/tower_slack)
 
 A simple [post-to-Slack](https://api.slack.com/messaging/webhooks) reporter for [Tower](https://github.com/mimiquate/tower) error handler.
 
