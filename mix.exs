@@ -1,7 +1,7 @@
 defmodule TowerSlack.MixProject do
   use Mix.Project
 
-  @description "A simple post-to-Slack reporter for Tower error handler"
+  @description "Error tracking and reporting to Slack"
   @source_url "https://github.com/mimiquate/tower_slack"
   @version "0.4.0"
 
