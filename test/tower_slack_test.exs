@@ -48,7 +48,16 @@ defmodule TowerSlackTest do
                   "elements" => [
                     %{
                       "type" => "text",
-                      "text" => "id: " <> _rest
+                      "text" => "id: " <> _id_rest
+                    }
+                  ]
+                },
+                %{
+                  "type" => "rich_text_section",
+                  "elements" => [
+                    %{
+                      "type" => "text",
+                      "text" => "similarity_id: " <> _similarity_rest
                     }
                   ]
                 }
@@ -69,6 +78,31 @@ defmodule TowerSlackTest do
       in_unlinked_process(fn ->
         1 / 0
       end)
+    end)
+
+    assert_receive({^ref, :sent}, 500)
+  end
+
+  test "protects from repeated events", %{bypass: bypass} do
+    # ref message synchronization trick copied from
+    # https://github.com/PSPDFKit-labs/bypass/issues/112
+    parent = self()
+    ref = make_ref()
+
+    Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
+      send(parent, {ref, :sent})
+
+      conn
+      |> Plug.Conn.put_resp_content_type("application/json")
+      |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
+    end)
+
+    capture_log(fn ->
+      for _ <- 1..5 do
+        in_unlinked_process(fn ->
+          1 / 0
+        end)
+      end
     end)
 
     assert_receive({^ref, :sent}, 500)
