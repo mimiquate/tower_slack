@@ -39,7 +39,7 @@ defmodule TowerSlack.MixProject do
       {:ex_doc, "~> 0.34.2", only: :dev, runtime: false},
 
       # Test
-      {:bypass, "~> 2.1", only: :test}
+      {:bypass, github: "mimiquate/bypass", only: :test}
     ]
   end
 
