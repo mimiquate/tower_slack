@@ -1,7 +1,7 @@
 defmodule TowerSlack.Message do
   @moduledoc false
 
-  def new(id, kind, reason, stacktrace \\ []) when is_list(stacktrace) do
+  def new(id, similarity_id, kind, reason, stacktrace \\ []) when is_list(stacktrace) do
     %{
       "blocks" => [
         %{
@@ -27,6 +27,15 @@ defmodule TowerSlack.Message do
                 %{
                   type: "text",
                   text: "id: #{id}"
+                }
+              ]
+            },
+            %{
+              type: "rich_text_section",
+              elements: [
+                %{
+                  type: "text",
+                  text: "similarity_id: #{similarity_id}"
                 }
               ]
             }

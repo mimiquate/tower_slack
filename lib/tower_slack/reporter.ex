@@ -3,30 +3,66 @@ defmodule TowerSlack.Reporter do
 
   @default_level :error
 
-  def report_event(%Tower.Event{level: level} = event) do
+  require Logger
+
+  def report_event(%Tower.Event{similarity_id: similarity_id, level: level} = event) do
     if Tower.equal_or_greater_level?(level, level()) do
-      do_report_event(event)
+      TowerSlack.KeyCounter.increment(similarity_id)
+      |> case do
+        1 ->
+          do_report_event(event)
+
+        amount ->
+          Logger.warning(
+            "Ignoring repeated event with similarity_id=#{similarity_id}. Seen #{amount} times."
+          )
+      end
     end
   end
 
   defp do_report_event(%Tower.Event{
          kind: :error,
          id: id,
+         similarity_id: similarity_id,
          reason: exception,
          stacktrace: stacktrace
        }) do
-    post_message(id, inspect(exception.__struct__), Exception.message(exception), stacktrace)
+    post_message(
+      id,
+      similarity_id,
+      inspect(exception.__struct__),
+      Exception.message(exception),
+      stacktrace
+    )
   end
 
-  defp do_report_event(%Tower.Event{kind: :throw, id: id, reason: reason, stacktrace: stacktrace}) do
-    post_message(id, "Uncaught throw", reason, stacktrace)
+  defp do_report_event(%Tower.Event{
+         kind: :throw,
+         id: id,
+         similarity_id: similarity_id,
+         reason: reason,
+         stacktrace: stacktrace
+       }) do
+    post_message(id, similarity_id, "Uncaught throw", reason, stacktrace)
   end
 
-  defp do_report_event(%Tower.Event{kind: :exit, id: id, reason: reason, stacktrace: stacktrace}) do
-    post_message(id, "Exit", reason, stacktrace)
+  defp do_report_event(%Tower.Event{
+         kind: :exit,
+         id: id,
+         similarity_id: similarity_id,
+         reason: reason,
+         stacktrace: stacktrace
+       }) do
+    post_message(id, similarity_id, "Exit", reason, stacktrace)
   end
 
-  defp do_report_event(%Tower.Event{kind: :message, id: id, level: level, reason: message}) do
+  defp do_report_event(%Tower.Event{
+         kind: :message,
+         id: id,
+         similarity_id: similarity_id,
+         level: level,
+         reason: message
+       }) do
     m =
       if is_binary(message) do
         message
@@ -34,12 +70,12 @@ defmodule TowerSlack.Reporter do
         inspect(message)
       end
 
-    post_message(id, "[#{level}] #{m}", "")
+    post_message(id, similarity_id, "[#{level}] #{m}", "")
   end
 
-  defp post_message(id, kind, reason, stacktrace \\ []) do
+  defp post_message(id, similarity_id, kind, reason, stacktrace \\ []) do
     {:ok, _} =
-      TowerSlack.Message.new(id, kind, reason, stacktrace)
+      TowerSlack.Message.new(id, similarity_id, kind, reason, stacktrace)
       |> TowerSlack.Client.deliver()
 
     :ok
