@@ -2,6 +2,8 @@ defmodule TowerSlackTest do
   use ExUnit.Case
   doctest TowerSlack
 
+  import ExUnit.CaptureLog, only: [capture_log: 1]
+
   setup do
     bypass = Bypass.open()
 
@@ -17,7 +19,6 @@ defmodule TowerSlackTest do
     {:ok, bypass: bypass}
   end
 
-  @tag capture_log: true
   test "reports arithmetic error", %{bypass: bypass} do
     # ref message synchronization trick copied from
     # https://github.com/PSPDFKit-labs/bypass/issues/112
@@ -70,8 +71,10 @@ defmodule TowerSlackTest do
       |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
     end)
 
-    in_unlinked_process(fn ->
-      1 / 0
+    capture_log(fn ->
+      in_unlinked_process(fn ->
+        1 / 0
+      end)
     end)
 
     assert_receive({^ref, :sent}, 500)
