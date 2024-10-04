@@ -10,12 +10,6 @@ defmodule TowerSlackTest do
     Application.put_env(:tower, :reporters, [TowerSlack.Reporter])
     Application.put_env(:tower_slack, :webhook_url, "http://localhost:#{bypass.port}/webhook")
 
-    Tower.attach()
-
-    on_exit(fn ->
-      Tower.detach()
-    end)
-
     {:ok, bypass: bypass}
   end
 
