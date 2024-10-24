@@ -14,73 +14,132 @@ defmodule TowerSlackTest do
   end
 
   test "reports arithmetic error", %{bypass: bypass} do
-    # ref message synchronization trick copied from
-    # https://github.com/PSPDFKit-labs/bypass/issues/112
-    parent = self()
-    ref = make_ref()
+    waiting_for(fn done ->
+      Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-    Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
-      {:ok, body, conn} = Plug.Conn.read_body(conn)
+        assert(
+          %{
+            "blocks" => [
+              %{
+                "type" => "rich_text",
+                "elements" => [
+                  %{
+                    "type" => "rich_text_section",
+                    "elements" => [
+                      %{
+                        "type" => "text",
+                        "text" =>
+                          "[tower_slack][test] ArithmeticError: bad argument in arithmetic expression"
+                      }
+                    ]
+                  },
+                  %{
+                    "type" => "rich_text_preformatted",
+                    "elements" => _,
+                    "border" => 0
+                  },
+                  %{
+                    "type" => "rich_text_section",
+                    "elements" => [
+                      %{
+                        "type" => "text",
+                        "text" => "id: " <> _id_rest
+                      }
+                    ]
+                  },
+                  %{
+                    "type" => "rich_text_section",
+                    "elements" => [
+                      %{
+                        "type" => "text",
+                        "text" => "similarity_id: " <> _similarity_rest
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          } = Jason.decode!(body)
+        )
 
-      assert(
-        %{
-          "blocks" => [
-            %{
-              "type" => "rich_text",
-              "elements" => [
-                %{
-                  "type" => "rich_text_section",
-                  "elements" => [
-                    %{
-                      "type" => "text",
-                      "text" =>
-                        "[tower_slack][test] ArithmeticError: bad argument in arithmetic expression"
-                    }
-                  ]
-                },
-                %{
-                  "type" => "rich_text_preformatted",
-                  "elements" => _,
-                  "border" => 0
-                },
-                %{
-                  "type" => "rich_text_section",
-                  "elements" => [
-                    %{
-                      "type" => "text",
-                      "text" => "id: " <> _id_rest
-                    }
-                  ]
-                },
-                %{
-                  "type" => "rich_text_section",
-                  "elements" => [
-                    %{
-                      "type" => "text",
-                      "text" => "similarity_id: " <> _similarity_rest
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        } = Jason.decode!(body)
-      )
+        done.()
 
-      send(parent, {ref, :sent})
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
+      end)
 
-      conn
-      |> Plug.Conn.put_resp_content_type("application/json")
-      |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
-    end)
-
-    capture_log(fn ->
-      in_unlinked_process(fn ->
-        1 / 0
+      capture_log(fn ->
+        in_unlinked_process(fn ->
+          1 / 0
+        end)
       end)
     end)
+  end
 
-    assert_receive({^ref, :sent}, 500)
+  test "reports :gen_server bad exit", %{bypass: bypass} do
+    waiting_for(fn done ->
+      Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+        assert(
+          %{
+            "blocks" => [
+              %{
+                "type" => "rich_text",
+                "elements" => [
+                  %{
+                    "type" => "rich_text_section",
+                    "elements" => [
+                      %{
+                        "type" => "text",
+                        "text" => "[tower_slack][test] Exit: bad return value: \"bad value\""
+                      }
+                    ]
+                  },
+                  %{
+                    "type" => "rich_text_preformatted",
+                    "elements" => _,
+                    "border" => 0
+                  },
+                  %{
+                    "type" => "rich_text_section",
+                    "elements" => [
+                      %{
+                        "type" => "text",
+                        "text" => "id: " <> _id_rest
+                      }
+                    ]
+                  },
+                  %{
+                    "type" => "rich_text_section",
+                    "elements" => [
+                      %{
+                        "type" => "text",
+                        "text" => "similarity_id: " <> _similarity_rest
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          } = Jason.decode!(body)
+        )
+
+        done.()
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
+      end)
+
+      capture_log(fn ->
+        in_unlinked_process(fn ->
+          exit({:bad_return_value, "bad value"})
+        end)
+      end)
+    end)
   end
 
   test "protects from repeated events", %{bypass: bypass} do
@@ -114,5 +173,18 @@ defmodule TowerSlackTest do
     pid
     |> Task.Supervisor.async_nolink(fun)
     |> Task.yield()
+  end
+
+  defp waiting_for(fun) do
+    # ref message synchronization trick copied from
+    # https://github.com/PSPDFKit-labs/bypass/issues/112
+    parent = self()
+    ref = make_ref()
+
+    fun.(fn ->
+      send(parent, {ref, :sent})
+    end)
+
+    assert_receive({^ref, :sent}, 500)
   end
 end

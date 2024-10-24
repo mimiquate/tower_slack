@@ -53,7 +53,7 @@ defmodule TowerSlack.Reporter do
          reason: reason,
          stacktrace: stacktrace
        }) do
-    post_message(id, similarity_id, "Exit", reason, stacktrace)
+    post_message(id, similarity_id, "Exit", Exception.format_exit(reason), stacktrace)
   end
 
   defp do_report_event(%Tower.Event{
