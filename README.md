@@ -17,7 +17,7 @@ The package can be installed by adding `tower_slack` to your list of dependencie
 
 def deps do
   [
-    {:tower_slack, "~> 0.5.2"}
+    {:tower_slack, "~> 0.5.3"}
   ]
 end
 ```
