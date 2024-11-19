@@ -176,8 +176,6 @@ defmodule TowerSlackTest do
       Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        # An exit instead of a throw because Bandit doesn't handle throw's
-        # for the moment. See: https://github.com/mtrudel/bandit/pull/410.
         assert(
           %{
             "blocks" => [
@@ -189,8 +187,7 @@ defmodule TowerSlackTest do
                     "elements" => [
                       %{
                         "type" => "text",
-                        "text" =>
-                          "[tower_slack][test] Exit: bad return value: \"from inside a plug\""
+                        "text" => "[tower_slack][test] Uncaught throw: \"from inside a plug\""
                       }
                     ]
                   },
@@ -235,8 +232,7 @@ defmodule TowerSlackTest do
           {Bandit, plug: TowerSlack.ErrorTestPlug, scheme: :http, port: plug_port}
         )
 
-        {:error, _response} =
-          :httpc.request(:get, {url, [{~c"user-agent", "httpc client"}]}, [], [])
+        {:ok, _response} = :httpc.request(:get, {url, [{~c"user-agent", "httpc client"}]}, [], [])
       end)
     end)
   end

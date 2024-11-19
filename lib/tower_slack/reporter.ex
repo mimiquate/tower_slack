@@ -40,10 +40,10 @@ defmodule TowerSlack.Reporter do
          kind: :throw,
          id: id,
          similarity_id: similarity_id,
-         reason: reason,
+         reason: value,
          stacktrace: stacktrace
        }) do
-    post_message(id, similarity_id, "Uncaught throw", reason, stacktrace)
+    post_message(id, similarity_id, "Uncaught throw", inspect(value), stacktrace)
   end
 
   defp do_report_event(%Tower.Event{
