@@ -34,7 +34,8 @@ defmodule TowerSlack.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:tower, "~> 0.7.1"},
+      # {:tower, "~> 0.7.1"},
+      {:tower, github: "mimiquate/tower", branch: "async"},
       {:jason, "~> 1.4"},
 
       # Dev

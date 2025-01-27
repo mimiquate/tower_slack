@@ -10,7 +10,7 @@ defmodule TowerSlack.Reporter do
       TowerSlack.KeyCounter.increment(similarity_id)
       |> case do
         1 ->
-          do_report_event(event)
+          Tower.async(fn -> do_report_event(event) end)
 
         amount ->
           Logger.warning(
