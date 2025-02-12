@@ -38,7 +38,7 @@ defmodule TowerSlack.MixProject do
       {:jason, "~> 1.4"},
 
       # Dev
-      {:ex_doc, "~> 0.36.1", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.37.1", only: :dev, runtime: false},
 
       # Test
       {:bandit, "~> 1.5", only: :test},
