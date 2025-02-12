@@ -42,7 +42,7 @@ defmodule TowerSlack.MixProject do
 
       # Test
       {:bandit, "~> 1.5", only: :test},
-      {:bypass, github: "mimiquate/bypass", branch: "master", only: :test}
+      {:lasso, "~> 0.1.4", only: :test}
     ]
   end
 

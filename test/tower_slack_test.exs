@@ -5,17 +5,17 @@ defmodule TowerSlackTest do
   import ExUnit.CaptureLog, only: [capture_log: 1]
 
   setup do
-    bypass = Bypass.open()
+    lasso = Lasso.open()
 
     Application.put_env(:tower, :reporters, [TowerSlack])
-    Application.put_env(:tower_slack, :webhook_url, "http://localhost:#{bypass.port}/webhook")
+    Application.put_env(:tower_slack, :webhook_url, "http://localhost:#{lasso.port}/webhook")
 
-    {:ok, bypass: bypass}
+    {:ok, lasso: lasso}
   end
 
-  test "reports arithmetic error", %{bypass: bypass} do
+  test "reports arithmetic error", %{lasso: lasso} do
     waiting_for(fn done ->
-      Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
+      Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
         assert(
@@ -78,9 +78,9 @@ defmodule TowerSlackTest do
     end)
   end
 
-  test "reports :gen_server bad exit", %{bypass: bypass} do
+  test "reports :gen_server bad exit", %{lasso: lasso} do
     waiting_for(fn done ->
-      Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
+      Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
         assert(
@@ -142,13 +142,13 @@ defmodule TowerSlackTest do
     end)
   end
 
-  test "protects from repeated events", %{bypass: bypass} do
+  test "protects from repeated events", %{lasso: lasso} do
     # ref message synchronization trick copied from
     # https://github.com/PSPDFKit-labs/bypass/issues/112
     parent = self()
     ref = make_ref()
 
-    Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
+    Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
       send(parent, {ref, :sent})
 
       conn
@@ -167,13 +167,13 @@ defmodule TowerSlackTest do
     assert_receive({^ref, :sent}, 500)
   end
 
-  test "reports throw with Bandit", %{bypass: bypass} do
+  test "reports throw with Bandit", %{lasso: lasso} do
     # An ephemeral port hopefully not being in the host running this code
     plug_port = 51111
     url = "http://127.0.0.1:#{plug_port}/uncaught-throw"
 
     waiting_for(fn done ->
-      Bypass.expect_once(bypass, "POST", "/webhook", fn conn ->
+      Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
         assert(
