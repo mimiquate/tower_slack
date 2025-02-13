@@ -18,49 +18,9 @@ defmodule TowerSlackTest do
       Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert(
-          %{
-            "blocks" => [
-              %{
-                "type" => "rich_text",
-                "elements" => [
-                  %{
-                    "type" => "rich_text_section",
-                    "elements" => [
-                      %{
-                        "type" => "text",
-                        "text" =>
-                          "[tower_slack][test] ArithmeticError: bad argument in arithmetic expression"
-                      }
-                    ]
-                  },
-                  %{
-                    "type" => "rich_text_preformatted",
-                    "elements" => _,
-                    "border" => 0
-                  },
-                  %{
-                    "type" => "rich_text_section",
-                    "elements" => [
-                      %{
-                        "type" => "text",
-                        "text" => "id: " <> _id_rest
-                      }
-                    ]
-                  },
-                  %{
-                    "type" => "rich_text_section",
-                    "elements" => [
-                      %{
-                        "type" => "text",
-                        "text" => "similarity_id: " <> _similarity_rest
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          } = Jason.decode!(body)
+        assert_banner(
+          body,
+          "[tower_slack][test] ArithmeticError: bad argument in arithmetic expression"
         )
 
         done.()
@@ -83,49 +43,7 @@ defmodule TowerSlackTest do
       Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert(
-          %{
-            "blocks" => [
-              %{
-                "type" => "rich_text",
-                "elements" => [
-                  %{
-                    "type" => "rich_text_section",
-                    "elements" => [
-                      %{
-                        "type" => "text",
-                        "text" => "[tower_slack][test] Exit: bad return value: \"bad value\""
-                      }
-                    ]
-                  },
-                  %{
-                    "type" => "rich_text_preformatted",
-                    "elements" => _,
-                    "border" => 0
-                  },
-                  %{
-                    "type" => "rich_text_section",
-                    "elements" => [
-                      %{
-                        "type" => "text",
-                        "text" => "id: " <> _id_rest
-                      }
-                    ]
-                  },
-                  %{
-                    "type" => "rich_text_section",
-                    "elements" => [
-                      %{
-                        "type" => "text",
-                        "text" => "similarity_id: " <> _similarity_rest
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          } = Jason.decode!(body)
-        )
+        assert_banner(body, "[tower_slack][test] Exit: bad return value: \"bad value\"")
 
         done.()
 
@@ -176,49 +94,7 @@ defmodule TowerSlackTest do
       Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert(
-          %{
-            "blocks" => [
-              %{
-                "type" => "rich_text",
-                "elements" => [
-                  %{
-                    "type" => "rich_text_section",
-                    "elements" => [
-                      %{
-                        "type" => "text",
-                        "text" => "[tower_slack][test] Uncaught throw: \"from inside a plug\""
-                      }
-                    ]
-                  },
-                  %{
-                    "type" => "rich_text_preformatted",
-                    "elements" => _,
-                    "border" => 0
-                  },
-                  %{
-                    "type" => "rich_text_section",
-                    "elements" => [
-                      %{
-                        "type" => "text",
-                        "text" => "id: " <> _id_rest
-                      }
-                    ]
-                  },
-                  %{
-                    "type" => "rich_text_section",
-                    "elements" => [
-                      %{
-                        "type" => "text",
-                        "text" => "similarity_id: " <> _similarity_rest
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          } = Jason.decode!(body)
-        )
+        assert_banner(body, "[tower_slack][test] Uncaught throw: \"from inside a plug\"")
 
         done.()
 
@@ -256,5 +132,51 @@ defmodule TowerSlackTest do
     end)
 
     assert_receive({^ref, :sent}, 500)
+  end
+
+  defp assert_banner(body, banner) do
+    assert(
+      %{
+        "blocks" => [
+          %{
+            "type" => "rich_text",
+            "elements" => [
+              %{
+                "type" => "rich_text_section",
+                "elements" => [
+                  %{
+                    "type" => "text",
+                    "text" => ^banner
+                  }
+                ]
+              },
+              %{
+                "type" => "rich_text_preformatted",
+                "elements" => _,
+                "border" => 0
+              },
+              %{
+                "type" => "rich_text_section",
+                "elements" => [
+                  %{
+                    "type" => "text",
+                    "text" => "id: " <> _id_rest
+                  }
+                ]
+              },
+              %{
+                "type" => "rich_text_section",
+                "elements" => [
+                  %{
+                    "type" => "text",
+                    "text" => "similarity_id: " <> _similarity_rest
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      } = Jason.decode!(body)
+    )
   end
 end
