@@ -74,9 +74,11 @@ defmodule TowerSlack.Reporter do
   end
 
   defp post_message(id, similarity_id, kind, reason, stacktrace \\ []) do
-    {:ok, _} =
-      TowerSlack.Message.new(id, similarity_id, kind, reason, stacktrace)
-      |> TowerSlack.Client.deliver()
+    message = TowerSlack.Message.new(id, similarity_id, kind, reason, stacktrace)
+
+    async(fn ->
+      {:ok, _} = TowerSlack.Client.deliver(message)
+    end)
 
     :ok
   end
@@ -85,5 +87,10 @@ defmodule TowerSlack.Reporter do
     # This config env can be to any of the 8 levels in https://www.erlang.org/doc/apps/kernel/logger#t:level/0,
     # or special values :all and :none.
     Application.get_env(:tower_slack, :level, @default_level)
+  end
+
+  defp async(fun) do
+    Tower.TaskSupervisor
+    |> Task.Supervisor.start_child(fun)
   end
 end
