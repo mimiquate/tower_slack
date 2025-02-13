@@ -1,43 +1,23 @@
 defmodule TowerSlack.Message do
   @moduledoc false
 
-  def new(id, similarity_id, kind, reason, stacktrace \\ []) when is_list(stacktrace) do
+  def new(preformatted, metadata \\ []) do
     %{
       "blocks" => [
         %{
           type: "rich_text",
           elements: [
             %{
-              type: "rich_text_section",
-              elements: [
-                %{
-                  type: "text",
-                  text: "[#{app_name()}][#{environment()}] #{kind}: #{reason}"
-                }
-              ]
-            },
-            %{
               type: "rich_text_preformatted",
-              elements: stacktrace_to_pre_elements(stacktrace),
+              elements:
+                [%{type: "text", text: preformatted <> "\n"}] ++
+                  metadata_elements(
+                    Keyword.merge(
+                      [app: app_name(), environment: environment()],
+                      metadata
+                    )
+                  ),
               border: 0
-            },
-            %{
-              type: "rich_text_section",
-              elements: [
-                %{
-                  type: "text",
-                  text: "id: #{id}"
-                }
-              ]
-            },
-            %{
-              type: "rich_text_section",
-              elements: [
-                %{
-                  type: "text",
-                  text: "similarity_id: #{similarity_id}"
-                }
-              ]
             }
           ]
         }
@@ -45,13 +25,22 @@ defmodule TowerSlack.Message do
     }
   end
 
-  defp stacktrace_to_pre_elements(stacktrace) do
-    stacktrace
-    |> Enum.map(
-      &%{
-        type: "text",
-        text: Exception.format_stacktrace_entry(&1) <> "\n"
-      }
+  defp metadata_elements(metadata) do
+    padding_count =
+      metadata
+      |> Keyword.keys()
+      |> Enum.map(&to_string/1)
+      |> Enum.map(&String.length/1)
+      |> Enum.max()
+
+    Enum.map(
+      metadata,
+      fn {key, value} ->
+        %{
+          type: "text",
+          text: "#{String.pad_trailing(to_string(key), padding_count)} = #{value}\n"
+        }
+      end
     )
   end
 

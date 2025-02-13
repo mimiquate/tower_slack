@@ -18,10 +18,7 @@ defmodule TowerSlackTest do
       Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert_banner(
-          body,
-          "[tower_slack][test] ArithmeticError: bad argument in arithmetic expression"
-        )
+        assert_banner(body, "** (ArithmeticError) bad argument in arithmetic expression\n")
 
         done.()
 
@@ -43,7 +40,7 @@ defmodule TowerSlackTest do
       Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert_banner(body, "[tower_slack][test] Exit: bad return value: \"bad value\"")
+        assert_banner(body, "** (exit) bad return value: \"bad value\"")
 
         done.()
 
@@ -85,6 +82,30 @@ defmodule TowerSlackTest do
     assert_receive({^ref, :sent}, 500)
   end
 
+  test "reports a Logger message (if enabled)", %{lasso: lasso} do
+    waiting_for(fn done ->
+      Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+        assert_banner(body, "[emergency] Emergency!")
+
+        done.()
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
+      end)
+
+      in_unlinked_process(fn ->
+        require Logger
+
+        capture_log(fn ->
+          Logger.emergency("Emergency!")
+        end)
+      end)
+    end)
+  end
+
   test "reports throw with Bandit", %{lasso: lasso} do
     # An ephemeral port hopefully not being in the host running this code
     plug_port = 51111
@@ -94,7 +115,7 @@ defmodule TowerSlackTest do
       Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert_banner(body, "[tower_slack][test] Uncaught throw: \"from inside a plug\"")
+        assert_banner(body, "** (throw) \"from inside a plug\"")
 
         done.()
 
@@ -142,36 +163,34 @@ defmodule TowerSlackTest do
             "type" => "rich_text",
             "elements" => [
               %{
-                "type" => "rich_text_section",
-                "elements" => [
-                  %{
-                    "type" => "text",
-                    "text" => ^banner
-                  }
-                ]
-              },
-              %{
                 "type" => "rich_text_preformatted",
-                "elements" => _,
+                "elements" => [
+                  %{
+                    "type" => "text",
+                    # Workaround for elixir 1.15: https://github.com/elixir-lang/elixir/pull/13106
+                    # When we drop support for elixir 1.15 the below line can become
+                    #
+                    #   "text" => ^banner <> _rest
+                    "text" => <<^banner::binary-size(byte_size(^banner))>> <> _rest
+                  },
+                  %{
+                    "type" => "text",
+                    "text" => "app           = tower_slack\n"
+                  },
+                  %{
+                    "type" => "text",
+                    "text" => "environment   = test\n"
+                  },
+                  %{
+                    "type" => "text",
+                    "text" => "id            = " <> _id_rest
+                  },
+                  %{
+                    "type" => "text",
+                    "text" => "similarity_id = " <> _similarity_rest
+                  }
+                ],
                 "border" => 0
-              },
-              %{
-                "type" => "rich_text_section",
-                "elements" => [
-                  %{
-                    "type" => "text",
-                    "text" => "id: " <> _id_rest
-                  }
-                ]
-              },
-              %{
-                "type" => "rich_text_section",
-                "elements" => [
-                  %{
-                    "type" => "text",
-                    "text" => "similarity_id: " <> _similarity_rest
-                  }
-                ]
               }
             ]
           }

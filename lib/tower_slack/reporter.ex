@@ -21,39 +21,18 @@ defmodule TowerSlack.Reporter do
   end
 
   defp do_report_event(%Tower.Event{
-         kind: :error,
-         id: id,
-         similarity_id: similarity_id,
-         reason: exception,
-         stacktrace: stacktrace
-       }) do
-    post_message(
-      id,
-      similarity_id,
-      inspect(exception.__struct__),
-      Exception.message(exception),
-      stacktrace
-    )
-  end
-
-  defp do_report_event(%Tower.Event{
-         kind: :throw,
-         id: id,
-         similarity_id: similarity_id,
-         reason: value,
-         stacktrace: stacktrace
-       }) do
-    post_message(id, similarity_id, "Uncaught throw", inspect(value), stacktrace)
-  end
-
-  defp do_report_event(%Tower.Event{
-         kind: :exit,
+         kind: kind,
          id: id,
          similarity_id: similarity_id,
          reason: reason,
          stacktrace: stacktrace
-       }) do
-    post_message(id, similarity_id, "Exit", Exception.format_exit(reason), stacktrace)
+       })
+       when kind in [:error, :exit, :throw] do
+    post_message(
+      Exception.format(kind, reason, stacktrace),
+      id: id,
+      similarity_id: similarity_id
+    )
   end
 
   defp do_report_event(%Tower.Event{
@@ -70,11 +49,11 @@ defmodule TowerSlack.Reporter do
         inspect(message)
       end
 
-    post_message(id, similarity_id, "[#{level}] #{m}", "")
+    post_message("[#{level}] #{m}", id: id, similarity_id: similarity_id)
   end
 
-  defp post_message(id, similarity_id, kind, reason, stacktrace \\ []) do
-    message = TowerSlack.Message.new(id, similarity_id, kind, reason, stacktrace)
+  defp post_message(preformatted, extra) do
+    message = TowerSlack.Message.new(preformatted, extra)
 
     async(fn ->
       {:ok, _} = TowerSlack.Client.deliver(message)
