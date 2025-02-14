@@ -34,10 +34,11 @@ defmodule TowerSlack.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:tower, "~> 0.7.1"},
+      {:tower, "~> 0.7.1 or ~> 0.8.0"},
       {:jason, "~> 1.4"},
 
       # Dev
+      {:blend, "~> 0.4.1", only: :dev},
       {:ex_doc, "~> 0.37.1", only: :dev, runtime: false},
 
       # Test
