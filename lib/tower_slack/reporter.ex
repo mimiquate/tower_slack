@@ -25,13 +25,15 @@ defmodule TowerSlack.Reporter do
          id: id,
          similarity_id: similarity_id,
          reason: reason,
-         stacktrace: stacktrace
+         stacktrace: stacktrace,
+         metadata: metadata
        })
        when kind in [:error, :exit, :throw] do
     post_message(
       Exception.format(kind, reason, stacktrace),
       id: id,
-      similarity_id: similarity_id
+      similarity_id: similarity_id,
+      metadata: inspect(metadata)
     )
   end
 
@@ -40,7 +42,8 @@ defmodule TowerSlack.Reporter do
          id: id,
          similarity_id: similarity_id,
          level: level,
-         reason: message
+         reason: message,
+         metadata: metadata
        }) do
     m =
       if is_binary(message) do
@@ -49,7 +52,12 @@ defmodule TowerSlack.Reporter do
         inspect(message)
       end
 
-    post_message("[#{level}] #{m}", id: id, similarity_id: similarity_id)
+    post_message(
+      "[#{level}] #{m}",
+      id: id,
+      similarity_id: similarity_id,
+      metadata: inspect(metadata)
+    )
   end
 
   defp post_message(preformatted, extra) do
