@@ -188,6 +188,10 @@ defmodule TowerSlackTest do
                   %{
                     "type" => "text",
                     "text" => "similarity_id = " <> _similarity_rest
+                  },
+                  %{
+                    "type" => "text",
+                    "text" => "metadata      = " <> _metadata
                   }
                 ],
                 "border" => 0
