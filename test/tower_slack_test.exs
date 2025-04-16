@@ -24,7 +24,7 @@ defmodule TowerSlackTest do
 
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
+        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
       end)
 
       capture_log(fn ->
@@ -46,7 +46,7 @@ defmodule TowerSlackTest do
 
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
+        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
       end)
 
       capture_log(fn ->
@@ -68,7 +68,7 @@ defmodule TowerSlackTest do
 
       conn
       |> Plug.Conn.put_resp_content_type("application/json")
-      |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
+      |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
     end)
 
     capture_log(fn ->
@@ -93,7 +93,7 @@ defmodule TowerSlackTest do
 
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
+        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
       end)
 
       in_unlinked_process(fn ->
@@ -121,7 +121,7 @@ defmodule TowerSlackTest do
 
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, Jason.encode!(%{"ok" => true}))
+        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
       end)
 
       capture_log(fn ->
@@ -199,7 +199,7 @@ defmodule TowerSlackTest do
             ]
           }
         ]
-      } = Jason.decode!(body)
+      } = TowerSlack.json_module().decode!(body)
     )
   end
 end

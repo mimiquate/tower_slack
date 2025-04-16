@@ -12,7 +12,7 @@ defmodule TowerSlack.Client do
         ~c"#{url}",
         [],
         ~c"application/json",
-        Jason.encode!(payload)
+        TowerSlack.json_module().encode!(payload)
       },
       [
         ssl: tls_client_options()
