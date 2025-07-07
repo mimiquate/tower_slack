@@ -82,7 +82,7 @@ else
     @impl Mix.Task
     def run(_argv) do
       Mix.shell().error("""
-      The task 'tower_slack.install' requires igniter. Please install igniter and try again.
+      The task 'tower_slack.install' requires igniter and tower > v0.8.3. Please install igniter or update tower and try again.
 
       For more information, see: https://hexdocs.pm/igniter/readme.html#installation
       """)
