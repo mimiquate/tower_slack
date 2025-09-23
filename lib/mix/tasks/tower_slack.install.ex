@@ -15,8 +15,6 @@ if Code.ensure_loaded?(Igniter) && Code.ensure_loaded?(Tower.Igniter) do
 
     use Igniter.Mix.Task
 
-    import Tower.Igniter
-
     @impl Igniter.Mix.Task
     def info(_argv, _composing_task) do
       %Igniter.Mix.Task.Info{
@@ -39,25 +37,18 @@ if Code.ensure_loaded?(Igniter) && Code.ensure_loaded?(Tower.Igniter) do
       app_name = Igniter.Project.Application.app_name(igniter)
 
       igniter
-      |> add_reporter_to_config(TowerSlack)
-      |> Igniter.Project.Config.configure(
-        "runtime.exs",
+      |> Tower.Igniter.reporters_list_append(TowerSlack)
+      |> Tower.Igniter.runtime_configure_reporter(
         :tower_slack,
-        [:otp_app],
-        app_name
-      )
-      |> Igniter.Project.Config.configure(
-        "runtime.exs",
-        :tower_slack,
-        [:webhook_url],
-        {:code, Sourceror.parse_string!("System.get_env(\"TOWER_SLACK_WEBHOOK_URL\")")}
-      )
-      |> Igniter.Project.Config.configure(
-        "runtime.exs",
-        :tower_slack,
-        [:environment],
-        {:code,
-         Sourceror.parse_string!("System.get_env(\"DEPLOYMENT_ENV\", to_string(config_env()))")}
+        otp_app: app_name,
+        webhook_url: {
+          :code,
+          Sourceror.parse_string!("System.get_env(\"TOWER_SLACK_WEBHOOK_URL\")")
+        },
+        environment: {
+          :code,
+          Sourceror.parse_string!("System.get_env(\"DEPLOYMENT_ENV\", to_string(config_env()))")
+        }
       )
     end
   end
