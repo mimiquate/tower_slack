@@ -1,4 +1,6 @@
-if Code.ensure_loaded?(Igniter) && Code.ensure_loaded?(Tower.Igniter) do
+if Code.ensure_loaded?(Igniter) and
+     Code.ensure_loaded?(Tower.Igniter) and
+     function_exported?(Tower.Igniter, :runtime_configure_reporter, 3) do
   defmodule Mix.Tasks.TowerSlack.Install do
     @example "mix igniter.install tower_slack"
 
