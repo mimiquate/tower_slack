@@ -36,13 +36,11 @@ if Code.ensure_loaded?(Igniter) and
 
     @impl Igniter.Mix.Task
     def igniter(igniter) do
-      app_name = Igniter.Project.Application.app_name(igniter)
-
       igniter
       |> Tower.Igniter.reporters_list_append(TowerSlack)
       |> Tower.Igniter.runtime_configure_reporter(
         :tower_slack,
-        otp_app: app_name,
+        otp_app: Igniter.Project.Application.app_name(igniter),
         webhook_url: {
           :code,
           Sourceror.parse_string!("System.get_env(\"TOWER_SLACK_WEBHOOK_URL\")")
