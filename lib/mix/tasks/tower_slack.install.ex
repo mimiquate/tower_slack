@@ -41,15 +41,13 @@ if Code.ensure_loaded?(Igniter) and
       |> Tower.Igniter.runtime_configure_reporter(
         :tower_slack,
         otp_app: Igniter.Project.Application.app_name(igniter),
-        webhook_url: {
-          :code,
-          Sourceror.parse_string!("System.get_env(\"TOWER_SLACK_WEBHOOK_URL\")")
-        },
-        environment: {
-          :code,
-          Sourceror.parse_string!("System.get_env(\"DEPLOYMENT_ENV\", to_string(config_env()))")
-        }
+        webhook_url: code_value(~s[System.get_env("TOWER_SLACK_WEBHOOK_URL")]),
+        environment: code_value(~s[System.get_env("DEPLOYMENT_ENV", to_string(config_env()))])
       )
+    end
+
+    defp code_value(value) do
+      {:code, Sourceror.parse_string!(value)}
     end
   end
 else
