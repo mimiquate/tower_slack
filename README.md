@@ -60,6 +60,21 @@ config :tower_slack,
 
 Instructions to create the Slack Webhook URL in https://api.slack.com/messaging/webhooks.
 
+## Manual reporting
+
+You can manually report errors just by informing `Tower` about any manually caught exceptions, throws or abnormal exits.
+
+E.g.
+
+```elixir
+try do
+  # possibly crashing code
+rescue
+  exception ->
+    Tower.report_exception(exception, __STACKTRACE__)
+end
+```
+
 ## License
 
 Copyright 2024 Mimiquate
