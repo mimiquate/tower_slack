@@ -22,7 +22,15 @@ def deps do
 end
 ```
 
-## Usage
+## Setup
+
+### Option A: Automated setup
+
+```sh
+$ mix tower_slack.install
+```
+
+### Option B: Manual setup
 
 Register the reporter with Tower.
 
