@@ -60,14 +60,17 @@ config :tower_slack,
 
 Instructions to create the Slack Webhook URL in https://api.slack.com/messaging/webhooks.
 
-That's it.
+## Reporting
 
-It will automatically report any errors (exceptions, throws or abnormal exits) occurring in your application.
+That's it.
+There's no extra source code needed to get reports in Slack.
+
+Tower will automatically report any errors (exceptions, throws or abnormal exits) occurring in your application.
 That includes errors in any plug call (including Phoenix), Oban jobs, async task or any other Elixir process.
 
-## Manual reporting
+### Manual reporting
 
-You can manually report errors just by informing `Tower` about any manually caught exceptions, throws or abnormal exits.
+You can additionally, manually report errors just by informing `Tower` about any manually caught exceptions, throws or abnormal exits.
 
 E.g.
 
