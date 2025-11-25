@@ -195,10 +195,7 @@ defmodule TowerSlackTest do
                     metadata      = %{
                                       application: %{
                                         name: :kernel,
-                                        version: \"10.4.2\"
-                                      }
-                                    }
-                    """
+                    """ <> _metadata_rest
                   }
                 ],
                 "border" => 0
