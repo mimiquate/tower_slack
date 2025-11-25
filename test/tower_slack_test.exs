@@ -191,11 +191,12 @@ defmodule TowerSlackTest do
                   },
                   %{
                     "type" => "text",
-                    "text" => """
-                    metadata      = %{
-                                      application: %{
-                                        name: :kernel,
-                    """ <> _metadata_rest
+                    "text" =>
+                      """
+                      metadata      = %{
+                                        application: %{
+                                          name: :kernel,
+                      """ <> _metadata_rest
                   }
                 ],
                 "border" => 0
