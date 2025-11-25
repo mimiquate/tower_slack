@@ -191,7 +191,15 @@ defmodule TowerSlackTest do
                   },
                   %{
                     "type" => "text",
-                    "text" => "metadata      = " <> _metadata
+                    "text" =>
+                      """
+                      metadata      = %{
+                                        application: %{
+                                          name: :kernel,
+                                          version: \"10.4.2\"
+                                        }
+                                      }
+                      """
                   }
                 ],
                 "border" => 0
