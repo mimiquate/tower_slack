@@ -191,7 +191,7 @@ defmodule TowerSlackTest do
                   },
                   %{
                     "type" => "text",
-                    "text" => "metadata      = " <> _metadata
+                    "text" => metadata_text
                   }
                 ],
                 "border" => 0
@@ -201,5 +201,20 @@ defmodule TowerSlackTest do
         ]
       } = TowerSlack.json_module().decode!(body)
     )
+
+    {:ok, vsn} = :application.get_key(:tower, :vsn)
+
+    vsn
+    |> List.to_string()
+    |> Version.match?("~> 0.8")
+    |> if do
+      assert(
+        """
+        metadata      = %{
+                          application: %{
+                            name: :kernel,
+        """ <> _metadata_rest = metadata_text
+      )
+    end
   end
 end

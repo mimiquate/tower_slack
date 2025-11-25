@@ -36,9 +36,22 @@ defmodule TowerSlack.Message do
     Enum.map(
       metadata,
       fn {key, value} ->
+        formatted_key =
+          key
+          |> to_string()
+          |> String.pad_trailing(padding_count)
+
+        formatted_value =
+          value
+          |> to_string()
+          |> String.replace(
+            "\n",
+            String.pad_trailing("\n", String.length(formatted_key) + 4)
+          )
+
         %{
           type: "text",
-          text: "#{String.pad_trailing(to_string(key), padding_count)} = #{value}\n"
+          text: "#{formatted_key} = #{formatted_value}\n"
         }
       end
     )

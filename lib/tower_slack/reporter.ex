@@ -33,7 +33,7 @@ defmodule TowerSlack.Reporter do
       Exception.format(kind, reason, stacktrace),
       id: id,
       similarity_id: similarity_id,
-      metadata: inspect(metadata)
+      metadata: formatted_metadata_value(metadata)
     )
   end
 
@@ -56,7 +56,7 @@ defmodule TowerSlack.Reporter do
       "[#{level}] #{m}",
       id: id,
       similarity_id: similarity_id,
-      metadata: inspect(metadata)
+      metadata: formatted_metadata_value(metadata)
     )
   end
 
@@ -68,6 +68,10 @@ defmodule TowerSlack.Reporter do
     end)
 
     :ok
+  end
+
+  defp formatted_metadata_value(metadata) do
+    inspect(metadata, pretty: true, width: 20)
   end
 
   defp level do
