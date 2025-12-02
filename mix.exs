@@ -4,7 +4,7 @@ defmodule TowerSlack.MixProject do
   @description "Error tracking and reporting to Slack"
   @source_url "https://github.com/mimiquate/tower_slack"
   @changelog_url @source_url <> "/blob/-/CHANGELOG.md"
-  @version "0.6.2"
+  @version "0.6.3"
 
   def project do
     [
