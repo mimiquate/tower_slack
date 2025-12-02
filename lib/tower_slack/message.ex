@@ -41,17 +41,9 @@ defmodule TowerSlack.Message do
           |> to_string()
           |> String.pad_trailing(padding_count)
 
-        formatted_value =
-          value
-          |> to_string()
-          |> String.replace(
-            "\n",
-            String.pad_trailing("\n", String.length(formatted_key) + 4)
-          )
-
         %{
           type: "text",
-          text: "#{formatted_key} = #{formatted_value}\n"
+          text: "#{formatted_key} = #{value}\n"
         }
       end
     )

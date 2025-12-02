@@ -2,6 +2,7 @@ defmodule TowerSlack.Reporter do
   @moduledoc false
 
   @default_level :error
+  @max_metadata_columns 120
 
   require Logger
 
@@ -71,7 +72,7 @@ defmodule TowerSlack.Reporter do
   end
 
   defp formatted_metadata_value(metadata) do
-    inspect(metadata, pretty: true, width: 20)
+    inspect(metadata, pretty: true, width: @max_metadata_columns)
   end
 
   defp level do
