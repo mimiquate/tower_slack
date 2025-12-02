@@ -208,12 +208,7 @@ defmodule TowerSlackTest do
     |> List.to_string()
     |> Version.match?("~> 0.8")
     |> if do
-      assert(
-        """
-        metadata      = %{
-                          process: %{
-        """ <> _metadata_rest = metadata_text
-      )
+      assert "metadata      = %{" <> _metadata_rest = metadata_text
     end
   end
 end
