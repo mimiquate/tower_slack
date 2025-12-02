@@ -211,8 +211,7 @@ defmodule TowerSlackTest do
       assert(
         """
         metadata      = %{
-                          application: %{
-                            name: :kernel,
+                          process: %{
         """ <> _metadata_rest = metadata_text
       )
     end
