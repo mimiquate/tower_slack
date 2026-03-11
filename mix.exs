@@ -28,6 +28,7 @@ defmodule TowerSlack.MixProject do
   def application do
     [
       mod: {TowerSlack.Application, []},
+      env: [ignore_duplicates_window: 60_000],
       extra_applications: [:logger, :public_key, :inets]
     ]
   end
