@@ -5,27 +5,32 @@ defmodule TowerSlackTest do
   import ExUnit.CaptureLog, only: [capture_log: 1]
 
   setup do
-    lasso = Lasso.open()
+    {:ok, test_server} = TestServer.start()
 
     Application.put_env(:tower, :reporters, [TowerSlack])
-    Application.put_env(:tower_slack, :webhook_url, "http://localhost:#{lasso.port}/webhook")
+    Application.put_env(:tower_slack, :webhook_url, "#{TestServer.url(test_server)}/webhook")
 
-    {:ok, lasso: lasso}
+    {:ok, test_server: test_server}
   end
 
-  test "reports arithmetic error", %{lasso: lasso} do
+  test "reports arithmetic error", %{test_server: test_server} do
     waiting_for(fn done ->
-      Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
-        {:ok, body, conn} = Plug.Conn.read_body(conn)
+      TestServer.add(
+        test_server,
+        "/webhook",
+        via: :post,
+        to: fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert_banner(body, "** (ArithmeticError) bad argument in arithmetic expression\n")
+          assert_banner(body, "** (ArithmeticError) bad argument in arithmetic expression\n")
 
-        done.()
+          done.()
 
-        conn
-        |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
-      end)
+          conn
+          |> Plug.Conn.put_resp_content_type("application/json")
+          |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
+        end
+      )
 
       capture_log(fn ->
         in_unlinked_process(fn ->
@@ -35,19 +40,24 @@ defmodule TowerSlackTest do
     end)
   end
 
-  test "reports :gen_server bad exit", %{lasso: lasso} do
+  test "reports :gen_server bad exit", %{test_server: test_server} do
     waiting_for(fn done ->
-      Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
-        {:ok, body, conn} = Plug.Conn.read_body(conn)
+      TestServer.add(
+        test_server,
+        "/webhook",
+        via: :post,
+        to: fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert_banner(body, "** (exit) bad return value: \"bad value\"")
+          assert_banner(body, "** (exit) bad return value: \"bad value\"")
 
-        done.()
+          done.()
 
-        conn
-        |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
-      end)
+          conn
+          |> Plug.Conn.put_resp_content_type("application/json")
+          |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
+        end
+      )
 
       capture_log(fn ->
         in_unlinked_process(fn ->
@@ -57,19 +67,24 @@ defmodule TowerSlackTest do
     end)
   end
 
-  test "protects from repeated events", %{lasso: lasso} do
+  test "protects from repeated events", %{test_server: test_server} do
     # ref message synchronization trick copied from
     # https://github.com/PSPDFKit-labs/bypass/issues/112
     parent = self()
     ref = make_ref()
 
-    Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
-      send(parent, {ref, :sent})
+    TestServer.add(
+      test_server,
+      "/webhook",
+      via: :post,
+      to: fn conn ->
+        send(parent, {ref, :sent})
 
-      conn
-      |> Plug.Conn.put_resp_content_type("application/json")
-      |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
-    end)
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
+      end
+    )
 
     capture_log(fn ->
       for _ <- 1..5 do
@@ -82,19 +97,24 @@ defmodule TowerSlackTest do
     assert_receive({^ref, :sent}, 500)
   end
 
-  test "reports a Logger message (if enabled)", %{lasso: lasso} do
+  test "reports a Logger message (if enabled)", %{test_server: test_server} do
     waiting_for(fn done ->
-      Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
-        {:ok, body, conn} = Plug.Conn.read_body(conn)
+      TestServer.add(
+        test_server,
+        "/webhook",
+        via: :post,
+        to: fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert_banner(body, "[emergency] Emergency!")
+          assert_banner(body, "[emergency] Emergency!")
 
-        done.()
+          done.()
 
-        conn
-        |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
-      end)
+          conn
+          |> Plug.Conn.put_resp_content_type("application/json")
+          |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
+        end
+      )
 
       in_unlinked_process(fn ->
         require Logger
@@ -106,23 +126,28 @@ defmodule TowerSlackTest do
     end)
   end
 
-  test "reports throw with Bandit", %{lasso: lasso} do
+  test "reports throw with Bandit", %{test_server: test_server} do
     # An ephemeral port hopefully not being in the host running this code
     plug_port = 51111
     url = "http://127.0.0.1:#{plug_port}/uncaught-throw"
 
     waiting_for(fn done ->
-      Lasso.expect_once(lasso, "POST", "/webhook", fn conn ->
-        {:ok, body, conn} = Plug.Conn.read_body(conn)
+      TestServer.add(
+        test_server,
+        "/webhook",
+        via: :post,
+        to: fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert_banner(body, "** (throw) \"from inside a plug\"")
+          assert_banner(body, "** (throw) \"from inside a plug\"")
 
-        done.()
+          done.()
 
-        conn
-        |> Plug.Conn.put_resp_content_type("application/json")
-        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
-      end)
+          conn
+          |> Plug.Conn.put_resp_content_type("application/json")
+          |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
+        end
+      )
 
       capture_log(fn ->
         start_supervised!(

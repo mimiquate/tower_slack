@@ -49,7 +49,7 @@ defmodule TowerSlack.MixProject do
 
       # Test
       {:bandit, "~> 1.5", only: :test},
-      {:lasso, "~> 0.1.4", only: :test}
+      {:test_server, "~> 0.1.22", only: :test}
     ]
   end
 
