@@ -23,7 +23,7 @@ jobs:
           - elixir: '1.15'
             erlang: '25.3.2.21'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/cache@v6
         if: ${{ ! matrix.lint }}
         with:
