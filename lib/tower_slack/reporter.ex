@@ -65,7 +65,15 @@ defmodule TowerSlack.Reporter do
     message = TowerSlack.Message.new(preformatted, extra)
 
     async(fn ->
-      {:ok, _} = TowerSlack.Client.deliver(message)
+      message
+      |> TowerSlack.Client.deliver()
+      |> case do
+        {:ok, _} ->
+          :ok
+
+        {:error, reason} ->
+          Logger.error("[TowerSlack] Error reporting event to Slack: #{inspect(reason)}")
+      end
     end)
 
     :ok
