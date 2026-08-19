@@ -7,8 +7,8 @@ defmodule TowerSlackTest do
   setup do
     {:ok, test_server} = TestServer.start()
 
-    Application.put_env(:tower, :reporters, [TowerSlack])
-    Application.put_env(:tower_slack, :webhook_url, "#{TestServer.url(test_server)}/webhook")
+    put_env(:tower, :reporters, [TowerSlack])
+    put_env(:tower_slack, :webhook_url, "#{TestServer.url(test_server)}/webhook")
 
     {:ok, test_server: test_server}
   end
@@ -159,6 +159,16 @@ defmodule TowerSlackTest do
     end)
   end
 
+  test "logs on report event error" do
+    put_env(:tower_slack, :webhook_url, "")
+
+    assert capture_log(fn ->
+             assert :ok = Tower.report_message(:critical, "Critical")
+
+             Process.sleep(100)
+           end) =~ ~r/\[TowerSlack\] Error reporting event to Slack: {:no_scheme}/
+  end
+
   defp in_unlinked_process(fun) when is_function(fun, 0) do
     {:ok, pid} = Task.Supervisor.start_link()
 
@@ -235,5 +245,18 @@ defmodule TowerSlackTest do
     |> if do
       assert "metadata      = %{" <> _metadata_rest = metadata_text
     end
+  end
+
+  defp put_env(app, key, value) do
+    original_value = Application.get_env(app, key)
+    Application.put_env(app, key, value)
+
+    on_exit(fn ->
+      if original_value == nil do
+        Application.delete_env(app, key)
+      else
+        Application.put_env(app, key, original_value)
+      end
+    end)
   end
 end
