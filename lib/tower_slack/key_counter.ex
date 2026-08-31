@@ -3,11 +3,15 @@ defmodule TowerSlack.KeyCounter do
 
   require Logger
 
-  @empty_state %{}
-  @reset_window 60_000
+  @empty_keys %{}
+  @default_reset_window 60_000
 
-  def start_link(_initial_value) do
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  def start_link(args) do
+    GenServer.start_link(
+      __MODULE__,
+      Keyword.get(args, :reset_window, @default_reset_window),
+      name: __MODULE__
+    )
   end
 
   def increment(key) do
@@ -17,34 +21,38 @@ defmodule TowerSlack.KeyCounter do
   # Callbacks
 
   @impl true
-  def init(_) do
-    Process.send_after(__MODULE__, :reset, @reset_window)
+  def init(reset_window) do
+    Process.send_after(__MODULE__, :reset, reset_window)
 
-    {:ok, @empty_state}
+    {:ok, initial_state(reset_window)}
   end
 
   @impl true
-  def handle_call({:increment, key}, _from, state) do
-    {_, new_state} =
+  def handle_call({:increment, key}, _from, %{keys: keys} = state) do
+    {_, new_keys} =
       Map.get_and_update(
-        state,
+        keys,
         key,
         fn current_value ->
           {current_value, (current_value || 0) + 1}
         end
       )
 
-    {:reply, Map.get(new_state, key), new_state}
+    {:reply, Map.get(new_keys, key), %{state | keys: new_keys}}
   end
 
   @impl true
-  def handle_info(:reset, state) do
-    Process.send_after(__MODULE__, :reset, @reset_window)
+  def handle_info(:reset, %{reset_window: reset_window, keys: keys}) do
+    Process.send_after(__MODULE__, :reset, reset_window)
 
-    if !Enum.empty?(state) do
-      Logger.warning("Resetting non-empty TowerSlack.KeyCounter state=#{inspect(state)}")
+    if !Enum.empty?(keys) do
+      Logger.warning("Resetting non-empty TowerSlack.KeyCounter keys=#{inspect(keys)}")
     end
 
-    {:noreply, @empty_state}
+    {:noreply, initial_state(reset_window)}
+  end
+
+  defp initial_state(reset_window) do
+    %{reset_window: reset_window, keys: @empty_keys}
   end
 end
