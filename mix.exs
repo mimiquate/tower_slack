@@ -39,6 +39,7 @@ defmodule TowerSlack.MixProject do
 
       # Optional
       {:igniter, "~> 0.6", optional: true},
+      {:tower_web, "~> 0.9", optional: true},
 
       # Only needed for Elixir < 1.18
       {:jason, "~> 1.4", optional: true},

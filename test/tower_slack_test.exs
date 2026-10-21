@@ -126,6 +126,42 @@ defmodule TowerSlackTest do
     end)
   end
 
+  test "links to the Tower Web occurrence of the reported event", %{test_server: test_server} do
+    base_url = "http://localhost:4000/tower_errors"
+    Application.put_env(:tower_web, :base_url, base_url)
+    on_exit(fn -> Application.delete_env(:tower_web, :base_url) end)
+
+    waiting_for(fn done ->
+      TestServer.add(
+        test_server,
+        "/webhook",
+        via: :post,
+        to: fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+          assert %{"blocks" => [_rich_text, link_block]} = TowerSlack.json_module().decode!(body)
+
+          assert link_block == %{
+                   "type" => "section",
+                   "text" => %{
+                     "type" => "mrkdwn",
+                     "text" =>
+                       "<#{base_url}/occurrences/#{event_id(body)}|View occurrence in Tower Web>"
+                   }
+                 }
+
+          done.()
+
+          conn
+          |> Plug.Conn.put_resp_content_type("application/json")
+          |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
+        end
+      )
+
+      Tower.report_message(:error, "Something went wrong")
+    end)
+  end
+
   test "reports throw with Bandit", %{test_server: test_server} do
     # An ephemeral port hopefully not being in the host running this code
     plug_port = 51111
@@ -157,6 +193,11 @@ defmodule TowerSlackTest do
         {:ok, _response} = :httpc.request(:get, {url, [{~c"user-agent", "httpc client"}]}, [], [])
       end)
     end)
+  end
+
+  defp event_id(body) do
+    [_, id] = Regex.run(~r/\bid\s+= ([0-9a-f-]{36})/, body)
+    id
   end
 
   defp in_unlinked_process(fun) when is_function(fun, 0) do
