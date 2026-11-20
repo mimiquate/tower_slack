@@ -62,13 +62,17 @@ defmodule TowerSlack.Reporter do
   end
 
   defp post_message(preformatted, extra) do
-    message = TowerSlack.Message.new(preformatted, extra)
+    case TowerSlack.Message.new(preformatted, extra) do
+      nil ->
+        :ok
 
-    async(fn ->
-      {:ok, _} = TowerSlack.Client.deliver(message)
-    end)
+      message ->
+        async(fn ->
+          {:ok, _} = TowerSlack.Client.deliver(message)
+        end)
 
-    :ok
+        :ok
+    end
   end
 
   defp formatted_metadata_value(metadata) do

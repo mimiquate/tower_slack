@@ -2,27 +2,34 @@ defmodule TowerSlack.Message do
   @moduledoc false
 
   def new(preformatted, metadata \\ []) do
-    %{
-      "blocks" => [
-        %{
-          type: "rich_text",
-          elements: [
-            %{
-              type: "rich_text_preformatted",
-              elements:
-                [%{type: "text", text: preformatted <> "\n"}] ++
-                  metadata_elements(
-                    Keyword.merge(
-                      [app: app_name(), environment: environment()],
-                      metadata
-                    )
-                  ),
-              border: 0
-            }
-          ]
-        }
-      ]
-    }
+    if not muted_issue?(Keyword.get(metadata, :similarity_id)) do
+      %{
+        "blocks" => [
+          %{
+            type: "rich_text",
+            elements: [
+              %{
+                type: "rich_text_preformatted",
+                elements:
+                  [%{type: "text", text: preformatted <> "\n"}] ++
+                    metadata_elements(
+                      Keyword.merge(
+                        [app: app_name(), environment: environment()],
+                        metadata
+                      )
+                    ),
+                border: 0
+              }
+            ]
+          }
+        ]
+      }
+    end
+  end
+
+  defp muted_issue?(similarity_id) do
+    Code.ensure_loaded?(TowerWeb) and function_exported?(TowerWeb, :issue_muted?, 1) and
+      TowerWeb.issue_muted?(similarity_id)
   end
 
   defp metadata_elements(metadata) do
