@@ -1,5 +1,5 @@
 defmodule TowerSlackTest do
-  use ExUnit.Case
+  use TowerSlack.DBCase
   doctest TowerSlack
 
   import ExUnit.CaptureLog, only: [capture_log: 1]
@@ -7,7 +7,7 @@ defmodule TowerSlackTest do
   setup do
     {:ok, test_server} = TestServer.start()
 
-    Application.put_env(:tower, :reporters, [TowerSlack])
+    Application.put_env(:tower, :reporters, [TowerWeb.DB.Reporter, TowerSlack])
     Application.put_env(:tower_slack, :webhook_url, "#{TestServer.url(test_server)}/webhook")
 
     {:ok, test_server: test_server}
@@ -95,6 +95,51 @@ defmodule TowerSlackTest do
     end)
 
     assert_receive({^ref, :sent}, 500)
+  end
+
+  test "marks the message as reopened when a new event reopens a resolved issue", %{
+    test_server: test_server
+  } do
+    parent = self()
+    ref = make_ref()
+
+    add_webhook_route = fn ->
+      TestServer.add(
+        test_server,
+        "/webhook",
+        via: :post,
+        to: fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
+          send(parent, {ref, body})
+
+          conn
+          |> Plug.Conn.put_resp_content_type("application/json")
+          |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
+        end
+      )
+    end
+
+    crash = fn -> exit(:badarith) end
+
+    add_webhook_route.()
+    capture_log(fn -> in_unlinked_process(crash) end)
+
+    assert_receive({^ref, first_body}, 500)
+    refute first_body =~ "This event reopened a previously resolved issue."
+
+    [event] = TowerWeb.DB.Events.list_events()
+    issue = TowerWeb.DB.Issues.get_issue(event.issue_id)
+    {:ok, _issue} = TowerWeb.DB.Issues.update_issue(issue, %{state: :resolved})
+
+    # Bypass TowerSlack.KeyCounter's repeated-event protection, which would otherwise
+    # also suppress this second occurrence regardless of the issue being reopened.
+    GenServer.stop(TowerSlack.KeyCounter)
+
+    add_webhook_route.()
+    capture_log(fn -> in_unlinked_process(crash) end)
+
+    assert_receive({^ref, second_body}, 500)
+    assert second_body =~ "This event reopened a previously resolved issue."
   end
 
   test "reports a Logger message (if enabled)", %{test_server: test_server} do
