@@ -2,6 +2,8 @@ defmodule TowerSlack.Message do
   @moduledoc false
 
   def new(preformatted, metadata \\ []) do
+    reopened? = reopened_issue?(Keyword.get(metadata, :id))
+
     %{
       "blocks" => [
         %{
@@ -10,7 +12,7 @@ defmodule TowerSlack.Message do
             %{
               type: "rich_text_preformatted",
               elements:
-                [%{type: "text", text: preformatted <> "\n"}] ++
+                preformatted_elements(preformatted, reopened?) ++
                   metadata_elements(
                     Keyword.merge(
                       [app: app_name(), environment: environment()],
@@ -23,6 +25,22 @@ defmodule TowerSlack.Message do
         }
       ]
     }
+  end
+
+  defp reopened_issue?(event_id) do
+    Code.ensure_loaded?(TowerWeb) and function_exported?(TowerWeb, :issue_reopened?, 1) and
+      TowerWeb.issue_reopened?(event_id)
+  end
+
+  defp preformatted_elements(preformatted, true) do
+    [
+      %{type: "text", text: "This event reopened a previously resolved issue.\n\n"},
+      %{type: "text", text: preformatted <> "\n"}
+    ]
+  end
+
+  defp preformatted_elements(preformatted, false) do
+    [%{type: "text", text: preformatted <> "\n"}]
   end
 
   defp metadata_elements(metadata) do
