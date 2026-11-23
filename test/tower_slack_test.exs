@@ -1,5 +1,5 @@
 defmodule TowerSlackTest do
-  use ExUnit.Case
+  use TowerSlack.DBCase
   doctest TowerSlack
 
   import ExUnit.CaptureLog, only: [capture_log: 1]
@@ -7,7 +7,7 @@ defmodule TowerSlackTest do
   setup do
     {:ok, test_server} = TestServer.start()
 
-    Application.put_env(:tower, :reporters, [TowerSlack])
+    Application.put_env(:tower, :reporters, [TowerWeb.DB.Reporter, TowerSlack])
     Application.put_env(:tower_slack, :webhook_url, "#{TestServer.url(test_server)}/webhook")
 
     {:ok, test_server: test_server}
@@ -95,6 +95,43 @@ defmodule TowerSlackTest do
     end)
 
     assert_receive({^ref, :sent}, 500)
+  end
+
+  test "does not post a message when the issue is muted", %{test_server: test_server} do
+    parent = self()
+    ref = make_ref()
+
+    TestServer.add(
+      test_server,
+      "/webhook",
+      via: :post,
+      to: fn conn ->
+        send(parent, {ref, :sent})
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.resp(200, TowerSlack.json_module().encode!(%{"ok" => true}))
+      end
+    )
+
+    crash = fn -> exit(:badarith) end
+
+    capture_log(fn -> in_unlinked_process(crash) end)
+
+    assert_receive({^ref, :sent}, 500)
+
+    [event] = TowerWeb.DB.Events.list_events()
+    issue = TowerWeb.DB.Issues.get_issue(event.issue_id)
+    muted_until = DateTime.add(DateTime.utc_now(), 3600, :second)
+    {:ok, _issue} = TowerWeb.DB.Issues.update_issue(issue, %{muted_until: muted_until})
+
+    # Bypass TowerSlack.KeyCounter's repeated-event protection, which would otherwise
+    # also suppress this second occurrence regardless of the issue being muted.
+    GenServer.stop(TowerSlack.KeyCounter)
+
+    capture_log(fn -> in_unlinked_process(crash) end)
+
+    refute_receive({^ref, :sent}, 500)
   end
 
   test "reports a Logger message (if enabled)", %{test_server: test_server} do
